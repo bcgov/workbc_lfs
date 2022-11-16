@@ -32,7 +32,7 @@ total_employment_year <- function(tbbl, year) {
     )
 }
 
-get_percentages <- function(ages, prefix) {
+age_percentages <- function(ages, prefix) {
   agg_emp_naics %>%
     filter(
       syear %in% c((last_full_year - 5), last_full_year),
@@ -64,7 +64,7 @@ percentage <- function(tbbl, var, value, quoted_value){
   tbbl%>%
     filter(syear %in% c(last_full_year, (last_full_year-5)))%>%
     pivot_wider(names_from = {{  var  }}, values_from = count)%>%
-    mutate(percent=scales::percent({{  value  }}/`NA`, accuracy = .1))%>%
+    mutate(percent=scales::percent({{  value  }}/`NA`, accuracy = .1))%>% #for RTRA data NA indicates the aggregate of all levels.
     select(syear, aggregate_industry, percent)%>%
     pivot_wider(names_from = syear, values_from = percent, names_prefix= paste0(quoted_value,"_"))
 }
@@ -81,6 +81,7 @@ cow <- load_clean_aggregate(pat = "COW")
 permtemp <- load_clean_aggregate(pat = "permtemp")
 size <- load_clean_aggregate(pat = "size")
 status <- load_clean_aggregate(pat = "lfsstat")
+hrlywages <- vroom(here("data", list.files(here("data"), pattern = "HrlyWages")))
 
 #process the data---------------------
 industry_overview <- total_employment_year(agg_emp_naics, (last_full_year - 1):last_full_year) %>%
@@ -109,13 +110,29 @@ industry_gender <- agg_emp_naics %>%
   ungroup() %>%
   select(aggregate_industry, men, women)
 
-industry_young <- get_percentages("between15and24", "percent_young_")
-industry_old <- get_percentages(c("between55and64", "65andover"), "percent_old_")
+industry_young <- age_percentages("between15and24", "percent_young_")
+industry_old <- age_percentages(c("between55and64", "65andover"), "percent_old_")
 industry_part_time <- percentage(ftpt, ftpt, part_time, "part-time")
 industry_self_employed <- percentage(cow, class, self_employed, "self_employed")
 industry_private <- percentage(cow, class, private_employe, "private_sector")
 industry_temporary <- percentage(permtemp, temp, temporary, "temporary")
 industry_size <- percentage(size, size, less_than_20_employees, "small")
 industry_unemployment <- percentage(status, lf_stat, unemployed, "unemployed")
+
+industry_gender_wages <- hrlywages%>%
+  mutate(naics = as.numeric(NAICS_5)) %>%
+  select(-NAICS_5) %>%
+  wrapR::clean_tbbl()%>%
+  full_join(mapping) %>%
+  select(-naics) %>%
+  group_by(syear, gender, aggregate_industry) %>%
+  summarize(average_wage = scales::dollar(weighted.mean(hrlyearn_num_mean, w=hrlyearn_num_count, na.rm=TRUE), accuracy = .01)) %>%
+  filter(!is.na(aggregate_industry),
+         syear %in% c(last_full_year, (last_full_year-5)),
+         !is.na(gender)
+         )%>%
+  pivot_wider(names_from = gender, values_from = average_wage)%>%
+  pivot_wider(names_from = syear, values_from = c("female","male"), names_prefix = "average_wage_")%>%
+  select(aggregate_industry, starts_with("male"), everything())
 
 
