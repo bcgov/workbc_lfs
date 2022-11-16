@@ -49,7 +49,7 @@ age_percentages <- function(ages, prefix) {
 }
 
 load_clean_aggregate <- function(pat) {
-  temp <- vroom(here("data", list.files(here("data"), pattern = pat))) %>%
+  temp <- vroom(here("data", list.files(here("data"), pattern = pat)))%>%
     mutate(naics = as.numeric(NAICS_5)) %>%
     select(-NAICS_5) %>%
     wrapR::clean_tbbl()%>%
@@ -82,8 +82,10 @@ permtemp <- load_clean_aggregate(pat = "permtemp")
 size <- load_clean_aggregate(pat = "size")
 status <- load_clean_aggregate(pat = "lfsstat")
 hrlywages <- vroom(here("data", list.files(here("data"), pattern = "HrlyWages")))
+youthwages <- vroom(here("data", list.files(here("data"), pattern = "wages_youth")))
+region <- load_clean_aggregate(pat = "EMP_REGION")
 
-#process the data---------------------
+#industry profiles---------------------
 industry_overview <- total_employment_year(agg_emp_naics, (last_full_year - 1):last_full_year) %>%
   rename(
     current_employment = contains(as.character(last_full_year)),
@@ -134,5 +136,91 @@ industry_gender_wages <- hrlywages%>%
   pivot_wider(names_from = gender, values_from = average_wage)%>%
   pivot_wider(names_from = syear, values_from = c("female","male"), names_prefix = "average_wage_")%>%
   select(aggregate_industry, starts_with("male"), everything())
+
+industry_youth_wages <- youthwages%>%
+  mutate(naics = as.numeric(NAICS_5))%>%
+  select(-NAICS_5) %>%
+  wrapR::clean_tbbl()%>%
+  full_join(mapping) %>%
+  select(-naics)%>%
+  filter(is.na(age),
+         is.na(gender))%>%
+  group_by(syear, aggregate_industry) %>%
+  summarize(average_wage = scales::dollar(weighted.mean(hrlyearn_num_mean, w=hrlyearn_num_count, na.rm=TRUE), accuracy = .01)) %>%
+  filter(!is.na(aggregate_industry),
+         syear %in% c(last_full_year, (last_full_year-5))
+  )%>%
+  pivot_wider(names_from = syear, values_from = average_wage, names_prefix = "youth_wages_")
+
+industry_location <- region%>%
+  filter(syear==last_full_year)%>%
+  pivot_wider(names_from = region, values_from = count)%>%
+  mutate(north_coast_nechako=north_coast+nechako, .after="lower_mainland_southwest")%>%
+  ungroup()%>%
+  select(-syear)%>%
+  mutate(across(where(is.numeric), ~ scales::percent(.x/`NA`, accuracy = .1)))%>%
+  select(-`NA`, -north_coast, -nechako)
+
+#regional profiles-----------------------------------
+
+regional_population <- cansim::get_cansim("17-10-0137-01")%>%
+  filter(!str_detect(`Age group`, "to"),
+        !str_detect(`Age group`, "65 years and older"),
+        !str_detect(`Age group`, "age"))%>%
+  mutate(age= parse_number(as.character(`Age group`)))%>%
+  select(-`Age group`)%>%
+  janitor::clean_names()%>%
+  filter(grepl('British Columbia', geo),
+         ref_date==max(ref_date),
+         sex=="Both sexes")%>%
+  select(geographic_area=geo, age, value)%>%
+  mutate(geographic_area=word(geographic_area, 1, sep = ","),
+         geographic_area=case_when(geographic_area=="North Coast"~"North Coast and Nechako",
+                                   geographic_area=="Nechako"~"North Coast and Nechako",
+                                   TRUE~geographic_area))%>%
+  group_by(geographic_area, age)%>%
+  summarize(value=sum(value))%>%
+  mutate(age_group = cut(age,
+                      breaks = c(0, 15, 25, 55, 65, 200),
+                      include.lowest = T,
+                      right = F))%>%
+  select(-age)%>%
+  group_by(age_group, geographic_area)%>%
+  summarize(value=sum(value))%>%
+  pivot_wider(names_from = age_group, values_from = value)%>%
+  janitor::adorn_percentages()%>%
+  mutate(across(where(is.numeric), ~scales::percent(.x, accuracy = 1)))
+
+#regional unemployment-------------
+
+
+
+regional_by_industry <- region%>%
+  filter(syear==last_full_year,
+         aggregate_industry!="total,_all_industries")%>%
+  mutate(region=case_when(is.na(region)~"british_columbia",
+                          region=="north_coast"~"north_coast_and_nechako",
+                          region=="nechako"~"north_coast_and_nechako",
+                          TRUE~region))%>%
+  group_by(region, aggregate_industry)%>%
+  summarize(count=sum(count))%>%
+  pivot_wider(names_from = aggregate_industry, values_from = count)%>%
+  janitor::adorn_percentages("row")%>%
+  mutate(across(where(is.numeric), ~scales::percent(.x, accuracy = .1)))%>%
+  arrange(region)
+
+regional_by_region <- region%>%
+  filter(syear==last_full_year,
+         !is.na(region))%>%
+  mutate(region=case_when(region=="north_coast"~"north_coast_and_nechako",
+                                   region=="nechako"~"north_coast_and_nechako",
+                                   TRUE~region))%>%
+  group_by(region, aggregate_industry)%>%
+  summarize(count=sum(count))%>%
+  pivot_wider(names_from = aggregate_industry, values_from = count)%>%
+  janitor::adorn_percentages("col")%>%
+  mutate(across(where(is.numeric), ~scales::percent(.x, accuracy = .1)))
+
+
 
 
