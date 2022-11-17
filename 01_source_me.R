@@ -19,9 +19,9 @@ previous_year <- last_full_year - 1
 # functions---------------
 source(here("R","functions.R"))
 # load data--------------------------------
-mapping <- vroom(here("data", "four_digit_naics_to_agg_industry.csv")) %>%
+mapping <- vroom(here("mapping_files", "four_digit_naics_to_agg_industry.csv")) %>%
   bind_rows(tibble(naics = NA, aggregate_industry = "total,_all_industries"))
-gvs_mapping <- vroom(here("data", "naics_to_gvs.csv"))
+gvs_mapping <- vroom(here("mapping_files", "naics_to_gvs.csv"))
 
 agg_emp_naics <- load_clean_aggregate(pat = "EMP_NAICS") %>%
   mutate(sex = factor(sex, levels = c(1, 2), labels = c("male", "female")))

@@ -10,22 +10,13 @@ workbc_lfs
 
 ### Usage
 
-Describe data being used (links), and how to run. Eg:
+1.  Go to https://www75.statcan.gc.ca/eft-tef/en/login-connexion and manually upload the 20 (i'm not kidding) .sas files in folder `SAS_for_RTRA`.
+2.  Go to bed and wake up next morning.
+3.  Clear your inbox of 140!!! email messages from Stats Can.
+4.  Empty the folder `data`.
+5.  Return to https://www75.statcan.gc.ca/eft-tef/en/login-connexion and manually download the 20 .csv files to folder `data`.
+6.  Source file 01_source_me.R.
 
-There are four core scripts that are required for the analysis, they need to be run in order:
-
--   01\_clean.R
--   02\_analysis.R
--   03\_visualize.R
--   04\_output.R
-
-#### Example
-
-This is a basic example which shows you how to solve a common problem:
-
-``` r
-## basic example code
-```
 
 ### Project Status
 
