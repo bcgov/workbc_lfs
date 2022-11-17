@@ -15,7 +15,8 @@ workbc_lfs
 3.  Clear your inbox of 140!!! email messages from Stats Can.
 4.  Empty the folder `data`.
 5.  Return to https://www75.statcan.gc.ca/eft-tef/en/login-connexion and manually download the 20 .csv files to folder `data`.
-6.  Source file 01_source_me.R.
+6.  Open file 01_source_me.R and change variable `last_full_year` to the year you want.
+7.  Source file 01_source_me.R.
 
 
 ### Project Status
