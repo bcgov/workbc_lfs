@@ -14,7 +14,7 @@ total_employment_year <- function(tbbl, year) {
 }
 
 age_percentages <- function(ages, prefix) {
-  agg_emp_naics %>%
+  temp <- agg_emp_naics %>%
     filter(
       syear %in% c((last_full_year - 5), last_full_year),
       is.na(sex),
@@ -25,8 +25,11 @@ age_percentages <- function(ages, prefix) {
     pivot_wider(names_from = in_age_group, values_from = count, names_prefix = "in_age_group_") %>%
     mutate(percent_in_age_group = scales::percent(in_age_group_TRUE / in_age_group_FALSE, accuracy = 1)) %>%
     ungroup() %>%
-    select(syear, aggregate_industry, percent_in_age_group) %>%
+    select(syear, aggregate_industry, percent_in_age_group)%>%
     pivot_wider(names_from = syear, values_from = percent_in_age_group, names_prefix = prefix)
+    colnames(temp) <- str_replace(colnames(temp),as.character(last_full_year), "current")
+    colnames(temp) <- str_replace(colnames(temp),as.character(last_full_year-5), "past")
+    temp
 }
 
 load_clean_aggregate <- function(pat) {
@@ -42,10 +45,29 @@ load_clean_aggregate <- function(pat) {
 }
 
 percentage <- function(tbbl, var, value, quoted_value){
-  tbbl%>%
+  temp <- tbbl%>%
     filter(syear %in% c(last_full_year, (last_full_year-5)))%>%
     pivot_wider(names_from = {{  var  }}, values_from = count)%>%
     mutate(percent=scales::percent({{  value  }}/`NA`, accuracy = .1))%>% #for RTRA data NA indicates the aggregate of all levels.
     select(syear, aggregate_industry, percent)%>%
     pivot_wider(names_from = syear, values_from = percent, names_prefix= paste0(quoted_value,"_"))
+  colnames(temp) <- str_replace(colnames(temp), as.character(last_full_year), "current")
+  colnames(temp) <- str_replace(colnames(temp), as.character(last_full_year-5), "past")
+  temp
 }
+
+# Function to quickly export data
+write_workbook <- function(data, sheetname, startrow, startcol, head) {
+  writeWorksheet(
+    wb,
+    data,
+    sheetname,
+    startRow = startrow,
+    startCol = startcol,
+    header = head
+  )
+}
+
+
+
+
