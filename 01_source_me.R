@@ -22,7 +22,7 @@ source(here("R","functions.R"))
 # load data--------------------------------
 mapping <- vroom(here("mapping_files", "four_digit_naics_to_agg_industry.csv")) %>%
   bind_rows(tibble(naics = NA, aggregate_industry = "total,_all_industries"))
-gvs_mapping <- vroom(here("mapping_files", "naics_to_gvs.csv"))
+gvs_mapping <- vroom(here("mapping_files", "naics_to_gvs.csv")) #goods vs services
 
 agg_emp_naics <- load_clean_aggregate(pat = "EMP_NAICS") %>%
   mutate(sex = factor(sex, levels = c(1, 2), labels = c("male", "female")))
@@ -31,9 +31,10 @@ cow <- load_clean_aggregate(pat = "COW")
 permtemp <- load_clean_aggregate(pat = "permtemp")
 size <- load_clean_aggregate(pat = "size")
 status <- load_clean_aggregate(pat = "lfsstat")
+region <- load_clean_aggregate(pat = "EMP_REGION")
+
 hrlywages <- vroom(here("data", list.files(here("data"), pattern = "HrlyWages")))
 youthwages <- vroom(here("data", list.files(here("data"), pattern = "wages_youth")))
-region <- load_clean_aggregate(pat = "EMP_REGION")
 reg_stat <- vroom(here("data", list.files(here("data"), pattern = "EMP_REG_STAT")))
 reg_ft <- vroom(here("data", list.files(here("data"), pattern = "ftpt_region")))
 region_gvs <- vroom(here("data", list.files(here("data"), pattern = "EMP_REGION")))
@@ -46,7 +47,8 @@ industry_overview <- total_employment_year(agg_emp_naics, (last_full_year - 1):l
   ) %>%
   mutate(
     yoy_change = scales::comma(current_employment - previous_employment),
-    yoy_growth = scales::percent(current_employment / previous_employment - 1, accuracy = .1)
+    yoy_growth = scales::percent(current_employment / previous_employment - 1, accuracy = .1),
+    current_employment =scales::comma(current_employment)
   ) %>%
   ungroup() %>%
   select(aggregate_industry, yoy_growth, yoy_change, current_employment)
@@ -66,6 +68,15 @@ industry_overview <- agg_emp_naics %>%
   select(aggregate_industry, men, women)%>%
   full_join(industry_overview)
 
+industry_unemployment <- status%>%
+  filter(syear %in% c(last_full_year, (last_full_year-5)))%>%
+  pivot_wider(names_from = lf_stat, values_from = count)%>%
+  mutate(percent=scales::percent(unemployed/(employed+unemployed), accuracy = .1))%>%
+  select(syear, aggregate_industry, percent)%>%
+  pivot_wider(names_from = syear, values_from = percent, names_prefix= paste0("unemployment","_"))
+colnames(industry_unemployment) <- str_replace(colnames(industry_unemployment), as.character(last_full_year), "current")
+colnames(industry_unemployment) <- str_replace(colnames(industry_unemployment), as.character(last_full_year-5), "past")
+
 industry_overview <- full_join(industry_overview, age_percentages("between15and24", "percent_young_"))%>%
 full_join(age_percentages(c("between55and64", "65andover"), "percent_old_"))%>%
 full_join(percentage(ftpt, ftpt, part_time, "part-time"))%>%
@@ -73,9 +84,10 @@ full_join(percentage(cow, class, self_employed, "self_employed"))%>%
 full_join(percentage(cow, class, private_employe, "private_sector"))%>%
 full_join(percentage(permtemp, temp, temporary, "temporary"))%>%
 full_join(percentage(size, size, less_than_20_employees, "small"))%>%
-full_join(percentage(status, lf_stat, unemployed, "unemployed"))
+full_join(industry_unemployment)
 
 industry_wages <- hrlywages%>%
+  filter(is.na(NAICS_5) | NAICS_5!="missi")%>%
   mutate(naics = as.numeric(NAICS_5)) %>%
   select(-NAICS_5) %>%
   wrapR::clean_tbbl()%>%
@@ -98,6 +110,7 @@ industry_overview <- industry_wages%>%
   full_join(industry_overview)
 
 industry_youth_wages <- youthwages%>%
+  filter(is.na(NAICS_5) | NAICS_5!="missi")%>%
   mutate(naics = as.numeric(NAICS_5))%>%
   select(-NAICS_5) %>%
   wrapR::clean_tbbl()%>%
@@ -131,8 +144,8 @@ industry_overview <- region%>%
 industry_cleaned <- industry_overview%>%
   select(aggregate_industry, yoy_growth, yoy_change, current_employment, men, women, percent_young_past, percent_young_current,
          percent_old_past, percent_old_current, `part-time_past`, `part-time_current`, self_employed_past, self_employed_current,
-         temporary_past, temporary_current, small_past, small_current, private_sector_past, private_sector_current, unemployed_past,
-         unemployed_current, male_average_wage_past, male_average_wage_current, female_average_wage_past, female_average_wage_current,
+         temporary_past, temporary_current, small_past, small_current, private_sector_past, private_sector_current, unemployment_past,
+         unemployment_current, male_average_wage_past, male_average_wage_current, female_average_wage_past, female_average_wage_current,
          youth_wages_past, youth_wages_current, cariboo, kootenay, lower_mainland_southwest, north_coast_nechako, northeast,
          thompson_okanagan, vancouver_island_and_coast)%>%
   wrapR::camel_to_title()%>%
@@ -270,6 +283,7 @@ regional_by_region <- region%>%
 
 #goods vs services--------------------
 regional_goods_vs_services <- region_gvs%>%
+  filter(is.na(NAICS_5) | NAICS_5!="missi")%>%
   mutate(naics=as.numeric(NAICS_5))%>%
   wrapR::clean_tbbl()%>%
   mutate(region=case_when(is.na(region)~"british_columbia",
@@ -304,10 +318,5 @@ saveWorkbook(wb, here(
   "out",
   paste0(last_full_year, "_LFS_data_sheet.xlsx")
 ))
-
-
-
-
-
 
 
