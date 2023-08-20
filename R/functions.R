@@ -33,7 +33,10 @@ age_percentages <- function(ages, prefix) {
 }
 
 load_clean_aggregate <- function(pat) {
+  #need to get rid of "missi" before converting to numeric, otherwise missi converted to NA and f's up aggregate.
+  #note that by default filter drops NA's, must explicitly state we want to keep the NAs (which in RTRA land are the aggregates.)
   temp <- vroom(here("data", list.files(here("data"), pattern = pat)))%>%
+  filter(is.na(NAICS_5) | NAICS_5!="missi")%>%
     mutate(naics = as.numeric(NAICS_5)) %>%
     select(-NAICS_5) %>%
     wrapR::clean_tbbl()%>%
@@ -50,7 +53,7 @@ percentage <- function(tbbl, var, value, quoted_value){
     pivot_wider(names_from = {{  var  }}, values_from = count)%>%
     mutate(percent=scales::percent({{  value  }}/`NA`, accuracy = .1))%>% #for RTRA data NA indicates the aggregate of all levels.
     select(syear, aggregate_industry, percent)%>%
-    pivot_wider(names_from = syear, values_from = percent, names_prefix= paste0(quoted_value,"_"))
+    pivot_wider(names_from = syear, values_from = percent, names_prefix= paste0(quoted_value, "_"))
   colnames(temp) <- str_replace(colnames(temp), as.character(last_full_year), "current")
   colnames(temp) <- str_replace(colnames(temp), as.character(last_full_year-5), "past")
   temp
