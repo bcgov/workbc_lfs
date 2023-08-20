@@ -15,7 +15,7 @@ library(vroom)
 library(here)
 library(XLConnect)
 # constants---------------
-last_full_year <- 2021
+last_full_year <- 2022
 previous_year <- last_full_year - 1
 # functions---------------
 source(here("R","functions.R"))
@@ -204,6 +204,7 @@ regional_full_time <-reg_ft%>%
 regional_unemployment <- reg_stat%>%
   janitor::clean_names()%>%
   filter(syear<=last_full_year,
+         syear>=last_full_year-10,
          is.na(naics_5),
          !is.na(syear))%>%
   select(-naics_5)%>%
@@ -316,7 +317,7 @@ write_workbook(regional_profile_3, "Regional Profiles", 33, 1, TRUE)
 
 saveWorkbook(wb, here(
   "out",
-  paste0(last_full_year, "_LFS_data_sheet.xlsx")
+  paste0(last_full_year, "_LFS_data_sheet(",today(),").xlsx")
 ))
 
 
