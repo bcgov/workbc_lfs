@@ -14,6 +14,8 @@ library(tidyverse)
 library(vroom)
 library(here)
 library(XLConnect)
+library(conflicted)
+conflicts_prefer(dplyr::filter)
 # constants---------------
 last_full_year <- 2022
 previous_year <- last_full_year - 1
@@ -29,7 +31,36 @@ agg_emp_naics <- load_clean_aggregate(pat = "EMP_NAICS") %>%
 ftpt <- load_clean_aggregate(pat = "empftpt_naics")
 cow <- load_clean_aggregate(pat = "COW")
 permtemp <- load_clean_aggregate(pat = "permtemp")
-size <- load_clean_aggregate(pat = "size")
+
+size <- cansim::get_cansim("14-10-0068-01")|>
+  filter(REF_DATE %in% c(last_full_year-5, last_full_year),
+         GEO=="British Columbia",
+         Sex=="Both sexes",
+         `Age group`=="15 years and over",
+         `Establishment size` %in% c("Less than 20 employees", "Total employees, all establishment sizes")
+  )|>
+  select(REF_DATE, `Establishment size`, `North American Industry Classification System (NAICS)`, val_norm)|>
+  pivot_wider(names_from = `Establishment size`, values_from = val_norm)|>
+  mutate(percent=scales::percent(`Less than 20 employees`/`Total employees, all establishment sizes`, accuracy=.1))|>
+  pivot_wider(id_cols = `North American Industry Classification System (NAICS)`, names_from = REF_DATE, values_from = percent)|>
+  mutate(aggregate_industry= str_remove(`North American Industry Classification System (NAICS)`,
+                                        " \\s*\\[[^\\]]+\\]"), .keep = "unused",
+         aggregate_industry=str_to_lower(str_replace_all(aggregate_industry, " ","_")),
+         aggregate_industry=if_else(aggregate_industry=="total_employees,_all_industries","total,_all_industries", aggregate_industry),
+         aggregate_industry=if_else(aggregate_industry=="agriculture","agriculture_and_fishing", aggregate_industry),
+         aggregate_industry=if_else(aggregate_industry=="finance,_insurance,_real_estate,_rental_and_leasing", "finance,_insurance_and_real_estate", aggregate_industry),
+         aggregate_industry=if_else(aggregate_industry=="forestry,_fishing,_mining,_quarrying,_oil_and_gas","forestry,_logging_and_support_activities", aggregate_industry),
+         aggregate_industry=if_else(aggregate_industry=="other_services_(except_public_administration)","repair,_personal_and_non-profit_services", aggregate_industry),
+         aggregate_industry=if_else(aggregate_industry=="wholesale_and_retail_trade", "retail_trade", aggregate_industry)
+         )
+
+extras <- size|>
+  filter(aggregate_industry %in% c("forestry,_logging_and_support_activities","retail_trade"))|>
+  mutate(aggregate_industry=if_else(aggregate_industry=="forestry,_logging_and_support_activities","mining_and_oil_and_gas_extraction", aggregate_industry),
+         aggregate_industry=if_else(aggregate_industry=="retail_trade", "wholesale_trade", aggregate_industry))
+
+size <- bind_rows(size,extras)
+colnames(size) <- c("small_past", "small_current", "aggregate_industry")
 status <- load_clean_aggregate(pat = "lfsstat")
 region <- load_clean_aggregate(pat = "EMP_REGION")
 
@@ -83,7 +114,7 @@ full_join(percentage(ftpt, ftpt, part_time, "part-time"))%>%
 full_join(percentage(cow, class, self_employed, "self_employed"))%>%
 full_join(percentage(cow, class, private_employe, "private_sector"))%>%
 full_join(percentage(permtemp, temp, temporary, "temporary"))%>%
-full_join(percentage(size, size, less_than_20_employees, "small"))%>%
+left_join(size)%>%
 full_join(industry_unemployment)
 
 industry_wages <- hrlywages%>%
