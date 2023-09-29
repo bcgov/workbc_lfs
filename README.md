@@ -6,10 +6,10 @@ workbc_lfs
 
 ### Usage
 
-1.  Go to https://eft-tef.statcan.gc.ca/#/ and manually upload the 22 (i'm not kidding) .sas files in folder `SAS_scripts_for_RTRA`. Note that RTRA has a usage limit, so needs to be split over two days.
+1.  Go to https://eft-tef.statcan.gc.ca/#/ and manually upload the 20 (i'm not kidding) .sas files in folder `SAS_scripts_for_RTRA`. Note that RTRA has a usage limit, so needs to be split over two days.
 2. Create a new directory in `data/archived_data` with the name of last year e.g. `2022`.
 3.  Move files from directory `data` into sub-directory you created above.
-4.  Return to https://eft-tef.statcan.gc.ca/#/ and download the 22 .csv files to folder `data`.
+4.  Return to https://eft-tef.statcan.gc.ca/#/ and download the 20 .csv files to folder `data`.
 5.  Open file `01_source_me.R` and change variable `last_full_year` to the previous year.
 6.  Source file `01_source_me.R`.
 7.  Check to make sure dates in output file `xxxx_LFS_data_sheet(xxxx-xxx-xx).xlsx` are correct: You might need to highlight entire sheet and (in libreoffice) `data>calculate>formula to value`. 
