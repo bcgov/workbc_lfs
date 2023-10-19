@@ -48,10 +48,12 @@ load_clean_aggregate <- function(pat) {
 }
 
 percentage <- function(tbbl, var, value, quoted_value){
-  temp <- tbbl%>%
+  tbbl <- tbbl%>%
     filter(syear %in% c(last_full_year, (last_full_year-5)))%>%
     pivot_wider(names_from = {{  var  }}, values_from = count)%>%
-    mutate(percent=scales::percent({{  value  }}/`NA`, accuracy = .1))%>% #for RTRA data NA indicates the aggregate of all levels.
+    mutate(percent=scales::percent({{  value  }}/`NA`, accuracy = .1))
+  #browser()
+  temp <- tbbl%>% #for RTRA data NA indicates the aggregate of all levels.
     select(syear, aggregate_industry, percent)%>%
     pivot_wider(names_from = syear, values_from = percent, names_prefix= paste0(quoted_value, "_"))
   colnames(temp) <- str_replace(colnames(temp), as.character(last_full_year), "current")
