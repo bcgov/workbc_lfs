@@ -309,7 +309,7 @@ regional_profile_3 <- full_join(regional_by_region, regional_goods_vs_services)%
 colnames(regional_profile_3) <- str_to_title(str_replace_all(colnames(regional_profile_3), "_"," "))
 
 
-#save data---------------------
+#save data with styles---------------------
 
 wb <- loadWorkbook(here("output_template", "LFS Data Sheet.xlsx"))
 prcntg <- createCellStyle(wb)
