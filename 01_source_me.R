@@ -17,7 +17,7 @@ library(XLConnect)
 library(conflicted)
 conflicts_prefer(dplyr::filter)
 # constants---------------
-last_full_year <- 2022
+last_full_year <- 2023
 previous_year <- last_full_year - 1
 # functions---------------
 source(here("R","functions.R"))
