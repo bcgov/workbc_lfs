@@ -73,6 +73,10 @@ write_workbook <- function(data, sheetname, startrow, startcol, head) {
   )
 }
 
+fill_redundant <- function(var){
+  unlist(industry_overview[industry_overview$aggregate_industry=="total,_all_industries", var])
+}
+
 
 
 

@@ -146,27 +146,26 @@ industry_overview <- region%>%
 
 #add in redundant columns-----------------------
 
-industry_overview$redundant_young <- industry_overview$percent_young_current[industry_overview$aggregate_industry=="total,_all_industries"]
-industry_overview$redundant_old <- industry_overview$percent_old_current[industry_overview$aggregate_industry=="total,_all_industries"]
-industry_overview$redundant_part_time <- industry_overview$part_time_current[industry_overview$aggregate_industry=="total,_all_industries"]
-industry_overview$redundant_self <- industry_overview$self_employed_current[industry_overview$aggregate_industry=="total,_all_industries"]
-industry_overview$redundant_private <- industry_overview$private_sector_current[industry_overview$aggregate_industry=="total,_all_industries"]
-industry_overview$redundant_temporary <- industry_overview$temporary_current[industry_overview$aggregate_industry=="total,_all_industries"]
-industry_overview$redundant_small <- industry_overview$small_current[industry_overview$aggregate_industry=="total,_all_industries"]
-industry_overview$redundant_unemployment <- industry_overview$unemployment_current[industry_unemployment$aggregate_industry=="total,_all_industries"]
-industry_overview$redundant_men <- industry_overview$men[industry_overview$aggregate_industry=="total,_all_industries"]
-industry_overview$redundant_women <- industry_overview$women[industry_overview$aggregate_industry=="total,_all_industries"]
-industry_overview$redundant_male_wage <- industry_overview$male_average_wage_current[industry_overview$aggregate_industry=="total,_all_industries"]
-industry_overview$redundant_female_wage <- industry_overview$female_average_wage_current[industry_overview$aggregate_industry=="total,_all_industries"]
-industry_overview$redundant_youth_wage <- industry_overview$youth_wages_current[industry_overview$aggregate_industry=="total,_all_industries"]
-industry_overview$redundant_cariboo <- industry_overview$cariboo[industry_overview$aggregate_industry=="total,_all_industries"]
-industry_overview$redundant_kootenay <- industry_overview$kootenay[industry_overview$aggregate_industry=="total,_all_industries"]
-industry_overview$redundant_lower_mainland_southwest <- industry_overview$lower_mainland_southwest[industry_overview$aggregate_industry=="total,_all_industries"]
-industry_overview$redundant_north_coast_nechako <- industry_overview$north_coast_nechako[industry_overview$aggregate_industry=="total,_all_industries"]
-industry_overview$redundant_northeast <- industry_overview$northeast[industry_overview$aggregate_industry=="total,_all_industries"]
-industry_overview$redundant_thompson_okanagan <- industry_overview$thompson_okanagan[industry_overview$aggregate_industry=="total,_all_industries"]
-industry_overview$redundant_vancouver_island_and_coast <- industry_overview$vancouver_island_and_coast[industry_overview$aggregate_industry=="total,_all_industries"]
-
+industry_overview$redundant_young <- fill_redundant("percent_young_current")
+industry_overview$redundant_old  <- fill_redundant("percent_old_current")
+industry_overview$redundant_part_time <- fill_redundant("part_time_current")
+industry_overview$redundant_self <- fill_redundant("self_employed_current")
+industry_overview$redundant_private <- fill_redundant("private_sector_current")
+industry_overview$redundant_temporary <- fill_redundant("temporary_current")
+industry_overview$redundant_small <- fill_redundant("small_current")
+industry_overview$redundant_unemployment <- fill_redundant("unemployment_current")
+industry_overview$redundant_men <- fill_redundant("men")
+industry_overview$redundant_women <- fill_redundant("women")
+industry_overview$redundant_male_wage <- fill_redundant("male_average_wage_current")
+industry_overview$redundant_female_wage <- fill_redundant("female_average_wage_current")
+industry_overview$redundant_youth_wage <- fill_redundant("youth_wages_current")
+industry_overview$redundant_cariboo <- fill_redundant("cariboo")
+industry_overview$redundant_kootenay <- fill_redundant("kootenay")
+industry_overview$redundant_lower_mainland_southwest <- fill_redundant("lower_mainland_southwest")
+industry_overview$redundant_north_coast_nechako <- fill_redundant("north_coast_nechako")
+industry_overview$redundant_northeast <- fill_redundant("northeast")
+industry_overview$redundant_thompson_okanagan <- fill_redundant("thompson_okanagan")
+industry_overview$redundant_vancouver_island_and_coast <- fill_redundant("vancouver_island_and_coast")
 
 industry_cleaned <- industry_overview%>%
   select(aggregate_industry, yoy_growth, yoy_change, current_employment, men, women, redundant_men, redundant_women,
