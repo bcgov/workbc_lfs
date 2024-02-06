@@ -49,13 +49,13 @@ industry_overview <- total_employment_year(agg_emp_naics, (last_full_year - 1):l
   ) %>%
   mutate(
     yoy_change = round(current_employment - previous_employment),
-    yoy_growth = round(current_employment / previous_employment - 1, digits = 3),
+    yoy_growth = round(100*(current_employment / previous_employment - 1), digits = 1),
     current_employment =round(current_employment)
   ) %>%
   ungroup() %>%
   select(aggregate_industry, yoy_growth, yoy_change, current_employment)
 
-industry_overview <- agg_emp_naics %>%
+industry_overview<- agg_emp_naics %>%
   filter(
     syear == last_full_year,
     is.na(agegrp),
@@ -63,8 +63,8 @@ industry_overview <- agg_emp_naics %>%
   ) %>%
   pivot_wider(names_from = sex, values_from = count) %>%
   mutate(
-    men = round(male / (male + female), digits=3),
-    women = round(female / (male + female), digits=3)
+    men = round(100* male / (male + female), digits=1),
+    women = round(100* female / (male + female), digits=1)
   ) %>%
   ungroup() %>%
   select(aggregate_industry, men, women)%>%
@@ -73,7 +73,7 @@ industry_overview <- agg_emp_naics %>%
 industry_unemployment <- status%>%
   filter(syear %in% c(last_full_year, (last_full_year-5)))%>%
   pivot_wider(names_from = lf_stat, values_from = count)%>%
-  mutate(percent=round(unemployed/(employed+unemployed), digits = 3))%>%
+  mutate(percent=round(100*unemployed/(employed+unemployed), digits = 1))%>%
   select(syear, aggregate_industry, percent)%>%
   pivot_wider(names_from = syear, values_from = percent, names_prefix= paste0("unemployment","_"))
 colnames(industry_unemployment) <- str_replace(colnames(industry_unemployment), as.character(last_full_year), "current")
@@ -81,7 +81,7 @@ colnames(industry_unemployment) <- str_replace(colnames(industry_unemployment), 
 
 industry_overview <- full_join(industry_overview, age_percentages("between15and24", "percent_young_"))%>%
 full_join(age_percentages(c("between55and64", "65andover"), "percent_old_"))%>%
-full_join(percentage(ftpt, ftpt, part_time, "part-time"))%>%
+full_join(percentage(ftpt, ftpt, part_time, "part_time"))%>%
 full_join(percentage(cow, class, self_employed, "self_employed"))%>%
 full_join(percentage(cow, class, private_employe, "private_sector"))%>%
 full_join(percentage(permtemp, temp, temporary, "temporary"))%>%
@@ -139,19 +139,48 @@ industry_overview <- region%>%
   mutate(north_coast_nechako=north_coast+nechako, .after="lower_mainland_southwest")%>%
   ungroup()%>%
   select(-syear)%>%
-  mutate(across(where(is.numeric), ~ round(.x/`NA`, digits=3)))%>%
+  mutate(across(where(is.numeric), ~ round(100*.x/`NA`, digits=1)))%>%
   select(-`NA`, -north_coast, -nechako)%>%
   full_join(industry_overview)
 
+
+#add in redundant columns-----------------------
+
+industry_overview$redundant_young <- industry_overview$percent_young_current[industry_overview$aggregate_industry=="total,_all_industries"]
+industry_overview$redundant_old <- industry_overview$percent_old_current[industry_overview$aggregate_industry=="total,_all_industries"]
+industry_overview$redundant_part_time <- industry_overview$part_time_current[industry_overview$aggregate_industry=="total,_all_industries"]
+industry_overview$redundant_self <- industry_overview$self_employed_current[industry_overview$aggregate_industry=="total,_all_industries"]
+industry_overview$redundant_private <- industry_overview$private_sector_current[industry_overview$aggregate_industry=="total,_all_industries"]
+industry_overview$redundant_temporary <- industry_overview$temporary_current[industry_overview$aggregate_industry=="total,_all_industries"]
+industry_overview$redundant_small <- industry_overview$small_current[industry_overview$aggregate_industry=="total,_all_industries"]
+industry_overview$redundant_unemployment <- industry_overview$unemployment_current[industry_unemployment$aggregate_industry=="total,_all_industries"]
+industry_overview$redundant_men <- industry_overview$men[industry_overview$aggregate_industry=="total,_all_industries"]
+industry_overview$redundant_women <- industry_overview$women[industry_overview$aggregate_industry=="total,_all_industries"]
+industry_overview$redundant_male_wage <- industry_overview$male_average_wage_current[industry_overview$aggregate_industry=="total,_all_industries"]
+industry_overview$redundant_female_wage <- industry_overview$female_average_wage_current[industry_overview$aggregate_industry=="total,_all_industries"]
+industry_overview$redundant_youth_wage <- industry_overview$youth_wages_current[industry_overview$aggregate_industry=="total,_all_industries"]
+industry_overview$redundant_cariboo <- industry_overview$cariboo[industry_overview$aggregate_industry=="total,_all_industries"]
+industry_overview$redundant_kootenay <- industry_overview$kootenay[industry_overview$aggregate_industry=="total,_all_industries"]
+industry_overview$redundant_lower_mainland_southwest <- industry_overview$lower_mainland_southwest[industry_overview$aggregate_industry=="total,_all_industries"]
+industry_overview$redundant_north_coast_nechako <- industry_overview$north_coast_nechako[industry_overview$aggregate_industry=="total,_all_industries"]
+industry_overview$redundant_northeast <- industry_overview$northeast[industry_overview$aggregate_industry=="total,_all_industries"]
+industry_overview$redundant_thompson_okanagan <- industry_overview$thompson_okanagan[industry_overview$aggregate_industry=="total,_all_industries"]
+industry_overview$redundant_vancouver_island_and_coast <- industry_overview$vancouver_island_and_coast[industry_overview$aggregate_industry=="total,_all_industries"]
+
+
 industry_cleaned <- industry_overview%>%
-  select(aggregate_industry, yoy_growth, yoy_change, current_employment, men, women, percent_young_past, percent_young_current,
-         percent_old_past, percent_old_current, `part-time_past`, `part-time_current`, self_employed_past, self_employed_current,
-         temporary_past, temporary_current, small_past, small_current, private_sector_past, private_sector_current, unemployment_past,
-         unemployment_current, male_average_wage_past, male_average_wage_current, female_average_wage_past, female_average_wage_current,
-         youth_wages_past, youth_wages_current, cariboo, kootenay, lower_mainland_southwest, north_coast_nechako, northeast,
-         thompson_okanagan, vancouver_island_and_coast)%>%
+  select(aggregate_industry, yoy_growth, yoy_change, current_employment, men, women, redundant_men, redundant_women,
+         percent_young_past, percent_young_current, redundant_young, percent_old_past, percent_old_current, redundant_old,
+         part_time_past, part_time_current, redundant_part_time, self_employed_past, self_employed_current, redundant_self,
+         temporary_past, temporary_current, redundant_temporary, small_past, small_current, redundant_small,
+         private_sector_past, private_sector_current, redundant_private, unemployment_past, unemployment_current, redundant_unemployment,
+         male_average_wage_past, male_average_wage_current, redundant_male_wage, female_average_wage_past, female_average_wage_current,
+         redundant_female_wage, youth_wages_past, youth_wages_current, redundant_youth_wage, cariboo, redundant_cariboo,
+         kootenay, redundant_kootenay, lower_mainland_southwest, redundant_lower_mainland_southwest, north_coast_nechako,
+         redundant_north_coast_nechako, northeast, redundant_northeast, thompson_okanagan, redundant_thompson_okanagan,
+         vancouver_island_and_coast, redundant_vancouver_island_and_coast)%>%
   wrapR::camel_to_title()%>%
-  slice(16,1:15,17:19) #hacky way to put total (16th row) at top.
+  slice(16, 1:15,17:19) #hacky way to put total (16th row) at top.
 
 #regional profiles-----------------------------------
 regional_population <- cansim::get_cansim("17-10-0137-01")%>%
@@ -178,9 +207,9 @@ regional_population <- cansim::get_cansim("17-10-0137-01")%>%
   select(-age)%>%
   group_by(age_group, region)%>%
   summarize(value=sum(value))%>%
-  pivot_wider(names_from = age_group, values_from = value, names_prefix = "in_age_group_")%>%
-  janitor::adorn_percentages()%>%
-  mutate(across(where(is.numeric), ~round(.x, digits=3)))%>%
+  pivot_wider(names_from = age_group, values_from = value, names_prefix = "in_age_group_")|>
+  janitor::adorn_percentages()|>
+  mutate(across(where(is.numeric), ~round(100*.x, digits=1)))%>%
   wrapR::clean_tbbl()
 
 #regional full-time rates----------------
@@ -197,7 +226,7 @@ regional_full_time <-reg_ft%>%
   ungroup()%>%
   select(-naics_5, -syear)%>%
   pivot_wider(names_from = ftpt_main, values_from = count)%>%
-  mutate(percent_full_time=round(full_time/`NA`, digits=3),
+  mutate(percent_full_time=round(100*full_time/`NA`, digits=1),
          full_time=round(full_time)
          )%>%
   select(region, percent_full_time, full_time)
@@ -223,13 +252,13 @@ regional_unemployment <- reg_stat%>%
 
 urate_summaries <- regional_unemployment%>%
   group_by(region)%>%
-  summarise(low=round(min(unemployment_rate), digits=3),
-            high=round(max(unemployment_rate), digits=3),
-            ave=round(mean(unemployment_rate), digits=3),
+  summarise(low=round(100*min(unemployment_rate), digits=1),
+            high=round(100*max(unemployment_rate), digits=1),
+            ave=round(100*mean(unemployment_rate), digits=1),
             )
 
 regional_unemployment <- regional_unemployment%>%
-  mutate(unemployment_rate=round(unemployment_rate, digits=3))%>%
+  mutate(unemployment_rate=round(100*unemployment_rate, digits=1))%>%
   pivot_wider(names_from = syear, values_from = unemployment_rate, names_prefix = "urate_")%>%
   full_join(urate_summaries)
 
@@ -251,10 +280,24 @@ regional_employment_by_industry <- region%>%
   pivot_wider(names_from = aggregate_industry, values_from = count)%>%
   arrange(region)
 
-regional_profile_2 <- regional_employment_by_industry%>%
+regional_employment_by_industry_percent <- regional_employment_by_industry%>%
   janitor::adorn_percentages("row")%>%
-  mutate(across(where(is.numeric), ~round(.x, digits=3)))%>%
+  mutate(across(where(is.numeric), ~round(100*.x, digits=1)))
+
+regional_employment_by_industry_long <- regional_employment_by_industry|>
+  pivot_longer(cols=-region)|>
+  mutate(name=paste0(name,"_level"),
+         value=round(value, 0))
+
+regional_employment_by_industry_percent_long <- regional_employment_by_industry_percent|>
+  pivot_longer(cols=-region)|>
+  mutate(name=paste0(name,"_percent"))
+
+regional_profile_2 <- bind_rows(regional_employment_by_industry_long, regional_employment_by_industry_percent_long)|>
+  arrange(name)|>
+  pivot_wider(id_cols = region, names_from = name, values_from = value)|>
   wrapR::camel_to_title()
+
 colnames(regional_profile_2) <- str_to_title(str_replace_all(colnames(regional_profile_2), "_"," "))
 
 # long_rbi <- regional_employment_by_industry%>%
@@ -282,7 +325,7 @@ regional_by_region <- region%>%
   summarize(count=sum(count))%>%
   pivot_wider(names_from = aggregate_industry, values_from = count)%>%
   janitor::adorn_percentages("col")%>%
-  mutate(across(where(is.numeric), ~round(.x, digits=3)))
+  mutate(across(where(is.numeric), ~round(100*.x, digits=1)))
 
 #goods vs services--------------------
 regional_goods_vs_services <- region_gvs%>%
@@ -299,8 +342,8 @@ regional_goods_vs_services <- region_gvs%>%
   group_by(region, goods_vs_services)%>%
   summarise(count=sum(count)/12)%>%
   pivot_wider(names_from = goods_vs_services, values_from = count)%>%
-  mutate(percent_goods=round(goods/`NA`, digits=3),
-         percent_services=round(services/`NA`, digits=3))%>%
+  mutate(percent_goods=round(100*goods/`NA`, digits=1),
+         percent_services=round(100*services/`NA`, digits=1))%>%
   select(region, percent_goods, percent_services)
 
 regional_profile_3 <- full_join(regional_by_region, regional_goods_vs_services)%>%
@@ -308,27 +351,26 @@ regional_profile_3 <- full_join(regional_by_region, regional_goods_vs_services)%
   wrapR::camel_to_title()
 colnames(regional_profile_3) <- str_to_title(str_replace_all(colnames(regional_profile_3), "_"," "))
 
+#save data without styles---------------------
 
-#save data with styles---------------------
-
-wb <- loadWorkbook(here("output_template", "LFS Data Sheet.xlsx"))
-prcntg <- createCellStyle(wb)
-setDataFormat(prcntg, format = "0.0%")
+wb <- loadWorkbook(here("output_template","2023_LFS_data_sheet_no_crap.xlsx"))
+# prcntg <- createCellStyle(wb)
+# setDataFormat(prcntg, format = "0.0%")
 
 write_workbook(industry_cleaned, "Industry Profiles", 5, 1, FALSE)
 write_workbook(regional_profile_1, "Regional Profiles", 6, 1, FALSE)
-write_workbook(regional_profile_2, "Regional Profiles", 19, 1, TRUE)
-write_workbook(regional_profile_3, "Regional Profiles", 33, 1, TRUE)
+write_workbook(regional_profile_2, "Regional Profiles", 21, 1, FALSE)
+write_workbook(regional_profile_3, "Regional Profiles", 35, 1, FALSE)
 
-rc0 = expand.grid(row = 5:23, col = c(2,5:22, 29:35))
-rc1 = expand.grid(row = 6:13, col = c(2:7, 9:22))
-rc2 = expand.grid(row = 20:27, col = 2:19)
-rc3 = expand.grid(row = 34:41, col = 2:21)
-
-setCellStyle(wb, sheet = "Industry Profiles", row= rc0$row, col = rc0$col, cellstyle = prcntg)
-setCellStyle(wb, sheet = "Regional Profiles", row= rc1$row, col = rc1$col, cellstyle = prcntg)
-setCellStyle(wb, sheet = "Regional Profiles", row= rc2$row, col = rc2$col, cellstyle = prcntg)
-setCellStyle(wb, sheet = "Regional Profiles", row= rc3$row, col = rc3$col, cellstyle = prcntg)
+# rc0 = expand.grid(row = 5:23, col = c(2,5:22, 29:35))
+# rc1 = expand.grid(row = 6:13, col = c(2:7, 9:22))
+# rc2 = expand.grid(row = 20:27, col = 2:19)
+# rc3 = expand.grid(row = 34:41, col = 2:21)
+#
+# setCellStyle(wb, sheet = "Industry Profiles", row= rc0$row, col = rc0$col, cellstyle = prcntg)
+# setCellStyle(wb, sheet = "Regional Profiles", row= rc1$row, col = rc1$col, cellstyle = prcntg)
+# setCellStyle(wb, sheet = "Regional Profiles", row= rc2$row, col = rc2$col, cellstyle = prcntg)
+# setCellStyle(wb, sheet = "Regional Profiles", row= rc3$row, col = rc3$col, cellstyle = prcntg)
 
 saveWorkbook(wb, here(
   "out",
