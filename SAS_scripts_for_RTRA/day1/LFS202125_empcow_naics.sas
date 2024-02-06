@@ -1,5 +1,5 @@
 /*************************************************************************************************/
-/*  Research Question: this program estimates employment by NAICS and B.C.	                 */ 
+/*  Research Question: this program estimates employment by NAICS and B.C.	                 */
 /*************************************************************************************************/
 
 Data work.EMPCOW_NAICS;
@@ -23,7 +23,7 @@ run;
 
 %RTRAFreq(
 	InputDataset=work.EMPCOW_NAICS,
-	OutputName=EMPCOW_NAICS2125,
+	OutputName=EMPCOW_NAICS_2125,
 	ClassVarList=SYEAR NAICS_5 CLASS,
 	UserWeight=FINALWT);
 run;

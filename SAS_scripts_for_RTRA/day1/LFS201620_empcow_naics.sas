@@ -23,7 +23,7 @@ run;
 
 %RTRAFreq(
 	InputDataset=work.EMPCOW_NAICS,
-	OutputName=EMPCOW_NAIC1620,
+	OutputName=EMPCOW_NAICS_1620,
 	ClassVarList=SYEAR NAICS_5 CLASS,
 	UserWeight=FINALWT);
 run;

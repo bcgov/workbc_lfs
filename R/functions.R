@@ -5,7 +5,7 @@ total_employment_year <- function(tbbl, year) {
       is.na(agegrp),
       is.na(sex)
     ) %>%
-    mutate(count = round(count, -2)) %>%
+    mutate(count = round(count)) %>%
     pivot_wider(
       names_from = syear,
       values_from = count,
@@ -23,7 +23,7 @@ age_percentages <- function(ages, prefix) {
     group_by(syear, in_age_group = !is.na(agegrp), aggregate_industry) %>%
     summarize(count = sum(count)) %>%
     pivot_wider(names_from = in_age_group, values_from = count, names_prefix = "in_age_group_") %>%
-    mutate(percent_in_age_group = scales::percent(in_age_group_TRUE / in_age_group_FALSE, accuracy = 1)) %>%
+    mutate(percent_in_age_group = round(in_age_group_TRUE / in_age_group_FALSE, digits=3)) %>%
     ungroup() %>%
     select(syear, aggregate_industry, percent_in_age_group)%>%
     pivot_wider(names_from = syear, values_from = percent_in_age_group, names_prefix = prefix)
@@ -51,8 +51,8 @@ percentage <- function(tbbl, var, value, quoted_value){
   tbbl <- tbbl%>%
     filter(syear %in% c(last_full_year, (last_full_year-5)))%>%
     pivot_wider(names_from = {{  var  }}, values_from = count)%>%
-    mutate(percent=scales::percent({{  value  }}/`NA`, accuracy = .1))
-  #browser()
+    mutate(percent=round({{  value  }}/`NA`, digits=3))
+
   temp <- tbbl%>% #for RTRA data NA indicates the aggregate of all levels.
     select(syear, aggregate_industry, percent)%>%
     pivot_wider(names_from = syear, values_from = percent, names_prefix= paste0(quoted_value, "_"))
