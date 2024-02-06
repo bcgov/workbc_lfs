@@ -300,18 +300,6 @@ regional_profile_2 <- bind_rows(regional_employment_by_industry_long, regional_e
 
 colnames(regional_profile_2) <- str_to_title(str_replace_all(colnames(regional_profile_2), "_"," "))
 
-# long_rbi <- regional_employment_by_industry%>%
-#   pivot_longer(cols=-region, names_to = "industry", values_to = "employment")
-#
-# long_rbi_percent <- regional_profile_2%>%
-#   pivot_longer(cols=-region, names_to = "industry", values_to = "percent of employment in region")
-#
-# for_meaghan <- full_join(long_rbi, long_rbi_percent)%>%
-#   mutate(employment=scales::comma(employment, accuracy = 100))%>%
-#   wrapR::camel_to_title()
-# for_meaghan%>%
-#   write_csv(here("out", "for_meaghan.csv"))
-
 #size of region within an industry-------------------
 regional_by_region <- region%>%
   filter(syear==last_full_year,
