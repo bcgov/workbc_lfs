@@ -1,4 +1,5 @@
 naics,aggregate_industry
+1100,agriculture_and_fishing
 1110,agriculture_and_fishing
 1111,agriculture_and_fishing
 1112,agriculture_and_fishing
@@ -42,6 +43,7 @@ naics,aggregate_industry
 1138,"forestry,_logging_and_support_activities"
 1139,"forestry,_logging_and_support_activities"
 1153,"forestry,_logging_and_support_activities"
+2100,mining_and_oil_and_gas_extraction
 2110,mining_and_oil_and_gas_extraction
 2111,mining_and_oil_and_gas_extraction
 2112,mining_and_oil_and_gas_extraction
@@ -868,6 +870,7 @@ naics,aggregate_industry
 5616,"business,_building_and_other_support_services"
 5617,"business,_building_and_other_support_services"
 5619,"business,_building_and_other_support_services"
+5629,"business,_building_and_other_support_services"
 6111,educational_services
 6112,educational_services
 6113,educational_services
