@@ -17,7 +17,7 @@ library(XLConnect)
 library(conflicted)
 conflicts_prefer(dplyr::filter)
 # constants---------------
-last_full_year <- 2023
+last_full_year <- 2024
 previous_year <- last_full_year - 1
 # functions---------------
 source(here("R","functions.R"))
@@ -92,7 +92,7 @@ industry_wages <- hrlywages%>%
   filter(is.na(NAICS_5) | NAICS_5!="missi")%>%
   mutate(naics = as.numeric(NAICS_5)) %>%
   select(-NAICS_5) %>%
-  wrapR::clean_tbbl()%>%
+  clean_tbbl()%>%
   full_join(mapping)%>%
   select(-naics) %>%
   group_by(syear, gender, aggregate_industry) %>%
@@ -115,7 +115,7 @@ industry_youth_wages <- youthwages%>%
   filter(is.na(NAICS_5) | NAICS_5!="missi")%>%
   mutate(naics = as.numeric(NAICS_5))%>%
   select(-NAICS_5) %>%
-  wrapR::clean_tbbl()%>%
+  clean_tbbl()%>%
   full_join(mapping) %>%
   select(-naics)%>%
   filter(is.na(age),
@@ -178,7 +178,7 @@ industry_cleaned <- industry_overview%>%
          kootenay, redundant_kootenay, lower_mainland_southwest, redundant_lower_mainland_southwest, north_coast_nechako,
          redundant_north_coast_nechako, northeast, redundant_northeast, thompson_okanagan, redundant_thompson_okanagan,
          vancouver_island_and_coast, redundant_vancouver_island_and_coast)%>%
-  wrapR::camel_to_title()%>%
+  camel_to_title()%>%
   slice(16, 1:15,17:19) #hacky way to put total (16th row) at top.
 
 #regional profiles-----------------------------------
@@ -209,11 +209,11 @@ regional_population <- cansim::get_cansim("17-10-0137-01")%>%
   pivot_wider(names_from = age_group, values_from = value, names_prefix = "in_age_group_")|>
   janitor::adorn_percentages()|>
   mutate(across(where(is.numeric), ~round(100*.x, digits=1)))%>%
-  wrapR::clean_tbbl()
+  clean_tbbl()
 
 #regional full-time rates----------------
 regional_full_time <-reg_ft%>%
-  wrapR::clean_tbbl()%>%
+  clean_tbbl()%>%
   filter(syear==last_full_year,
          is.na(naics_5))%>%
   mutate(region=case_when(is.na(region)~"british_columbia",
@@ -247,7 +247,7 @@ regional_unemployment <- reg_stat%>%
   pivot_wider(names_from = lf_stat, values_from = count)%>%
   mutate(unemployment_rate=Unemployed/(Employed+Unemployed))%>%
   select(syear, region, unemployment_rate)%>%
-  wrapR::clean_tbbl()
+  clean_tbbl()
 
 urate_summaries <- regional_unemployment%>%
   group_by(region)%>%
@@ -263,7 +263,7 @@ regional_unemployment <- regional_unemployment%>%
 
 regional_profile_1 <- full_join(regional_population, regional_full_time)%>%
   full_join(regional_unemployment)%>%
-  wrapR::camel_to_title()
+  camel_to_title()
 
 
 # size of industry within a region---------------
@@ -295,7 +295,7 @@ regional_employment_by_industry_percent_long <- regional_employment_by_industry_
 regional_profile_2 <- bind_rows(regional_employment_by_industry_long, regional_employment_by_industry_percent_long)|>
   arrange(name)|>
   pivot_wider(id_cols = region, names_from = name, values_from = value)|>
-  wrapR::camel_to_title()
+  camel_to_title()
 
 colnames(regional_profile_2) <- str_to_title(str_replace_all(colnames(regional_profile_2), "_"," "))
 
@@ -318,7 +318,7 @@ regional_by_region <- region%>%
 regional_goods_vs_services <- region_gvs%>%
   filter(is.na(NAICS_5) | NAICS_5!="missi")%>%
   mutate(naics=as.numeric(NAICS_5))%>%
-  wrapR::clean_tbbl()%>%
+  clean_tbbl()%>%
   mutate(region=case_when(is.na(region)~"british_columbia",
                          region=="north_coast"~"north_coast_and_nechako",
                          region=="nechako"~"north_coast_and_nechako",
@@ -335,12 +335,12 @@ regional_goods_vs_services <- region_gvs%>%
 
 regional_profile_3 <- full_join(regional_by_region, regional_goods_vs_services)%>%
   arrange(region)%>%
-  wrapR::camel_to_title()
+  camel_to_title()
 colnames(regional_profile_3) <- str_to_title(str_replace_all(colnames(regional_profile_3), "_"," "))
 
 #save data without styles---------------------
 
-wb <- loadWorkbook(here("output_template","2023_LFS_data_sheet_no_crap.xlsx"))
+wb <- loadWorkbook(here("output_template","LFS_Data_Sheet_template.xlsx"))
 # prcntg <- createCellStyle(wb)
 # setDataFormat(prcntg, format = "0.0%")
 
