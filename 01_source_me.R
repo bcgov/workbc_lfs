@@ -15,6 +15,7 @@ library(vroom)
 library(here)
 library(XLConnect)
 library(conflicted)
+library(janitor)
 conflicts_prefer(dplyr::filter)
 # constants---------------
 last_full_year <- 2024
@@ -22,12 +23,44 @@ previous_year <- last_full_year - 1
 # functions---------------
 source(here("R","functions.R"))
 # load data--------------------------------
-mapping <- vroom(here("mapping_files", "four_digit_naics_to_agg_industry.csv")) %>%
-  bind_rows(tibble(naics = NA, aggregate_industry = "total,_all_industries"))
-gvs_mapping <- vroom(here("mapping_files", "naics_to_gvs.csv")) #goods vs services
+all_mapping <- readxl::read_excel(here("mapping_files", "industry_mapping_2025.xlsx"))
 
-agg_emp_naics <- load_clean_aggregate(pat = "EMP_NAICS") %>%
+mapping <- all_mapping|>
+  select(naics_5, aggregate_industry)
+gvs_mapping <- all_mapping|>
+  select(naics_5, goods_vs_services)
+
+#DEAL WITH SEX/GENDER MISMATCH (sex pre 2020, gender post)
+
+hrlywages_1620 <- vroom(here("data", list.files(here("data"), pattern = "HrlyWages_1620")))
+old_column_names <- colnames(hrlywages_1620)
+hrlywages_2125 <- vroom(here("data", list.files(here("data"), pattern = "HrlyWages_2125")))
+colnames(hrlywages_2125) <- old_column_names
+hrlywages <- bind_rows(hrlywages_1620, hrlywages_2125)%>%
+  clean_names()|>
   mutate(sex = factor(sex, levels = c(1, 2), labels = c("male", "female")))
+
+youthwages_1620 <- vroom(here("data", list.files(here("data"), pattern = "wages_youth1620")))
+old_column_names <- colnames(youthwages_1620)
+youthwages_2125 <- vroom(here("data", list.files(here("data"), pattern = "wages_youth2125")))
+colnames(youthwages_2125) <- old_column_names
+youthwages <- bind_rows(youthwages_1620, youthwages_2125)%>%
+  clean_names()|>
+  mutate(sex = factor(sex, levels = c(1, 2), labels = c("male", "female")))
+
+emp_naics_1620 <- vroom(here("data", list.files(here("data"), pattern = "EMP_NAICS_1620")))
+old_column_names <- colnames(emp_naics_1620)
+emp_naics_2125 <- vroom(here("data", list.files(here("data"), pattern = "EMP_NAICS_2125")))
+colnames(emp_naics_2125) <- old_column_names
+
+agg_emp_naics <- bind_rows(emp_naics_1620, emp_naics_2125)|>
+  clean_names()|>
+  left_join(mapping, by=c("naics_5"="naics_5"))%>%
+  select(-naics_5) %>%
+  group_by(syear, agegrp, sex, aggregate_industry)%>%
+  summarize(count = sum(count) / 12)%>%
+  mutate(sex = factor(sex, levels = c(1, 2), labels = c("male", "female")))
+
 ftpt <- load_clean_aggregate(pat = "empftpt_naics")
 cow <- load_clean_aggregate(pat = "COW")
 permtemp <- load_clean_aggregate(pat = "permtemp")
@@ -35,14 +68,12 @@ size <- load_clean_aggregate(pat = "size")
 status <- load_clean_aggregate(pat = "lfsstat")
 region <- load_clean_aggregate(pat = "EMP_REGION")
 
-hrlywages <- vroom(here("data", list.files(here("data"), pattern = "HrlyWages")))
-youthwages <- vroom(here("data", list.files(here("data"), pattern = "wages_youth")))
 reg_stat <- vroom(here("data", list.files(here("data"), pattern = "EMP_REG_STAT")))
 reg_ft <- vroom(here("data", list.files(here("data"), pattern = "ftpt_region")))
 region_gvs <- vroom(here("data", list.files(here("data"), pattern = "EMP_REGION")))
 
 #industry profiles---------------------
-industry_overview <- total_employment_year(agg_emp_naics, (last_full_year - 1):last_full_year) %>%
+industry_overview <- total_employment_year(agg_emp_naics, last_full_year)%>%
   rename(
     current_employment = contains(as.character(last_full_year)),
     previous_employment = contains(as.character(previous_year))
@@ -79,8 +110,8 @@ industry_unemployment <- status%>%
 colnames(industry_unemployment) <- str_replace(colnames(industry_unemployment), as.character(last_full_year), "current")
 colnames(industry_unemployment) <- str_replace(colnames(industry_unemployment), as.character(last_full_year-5), "past")
 
-industry_overview <- full_join(industry_overview, age_percentages("between15and24", "percent_young_"))%>%
-full_join(age_percentages(c("between55and64", "65andover"), "percent_old_"))%>%
+industry_overview <- full_join(industry_overview, age_percentages("Between15and24", "percent_young_"))%>%
+full_join(age_percentages(c("Between55and64", "65andover"), "percent_old_"))%>%
 full_join(percentage(ftpt, ftpt, part_time, "part_time"))%>%
 full_join(percentage(cow, class, self_employed, "self_employed"))%>%
 full_join(percentage(cow, class, private_employe, "private_sector"))%>%
@@ -89,19 +120,14 @@ full_join(percentage(size, size, less_than_20_employees, "small"))%>%
 full_join(industry_unemployment)
 
 industry_wages <- hrlywages%>%
-  filter(is.na(NAICS_5) | NAICS_5!="missi")%>%
-  mutate(naics = as.numeric(NAICS_5)) %>%
-  select(-NAICS_5) %>%
-  clean_tbbl()%>%
   full_join(mapping)%>%
-  select(-naics) %>%
-  group_by(syear, gender, aggregate_industry) %>%
+  group_by(syear, sex, aggregate_industry) %>%
   summarize(average_wage = round(weighted.mean(hrlyearn_num_mean, w=hrlyearn_num_count, na.rm=TRUE), digits=2)) %>%
   filter(!is.na(aggregate_industry),
          syear %in% c(last_full_year, (last_full_year-5)),
-         !is.na(gender)
+         !is.na(sex)
          )%>%
-  pivot_wider(names_from = gender, values_from = average_wage)%>%
+  pivot_wider(names_from = sex, values_from = average_wage)%>%
   pivot_wider(names_from = syear, values_from = c("female","male"), names_prefix = "average_wage_")%>%
   select(aggregate_industry, starts_with("male"), everything())
 
@@ -112,14 +138,9 @@ industry_overview <- industry_wages%>%
   full_join(industry_overview)
 
 industry_youth_wages <- youthwages%>%
-  filter(is.na(NAICS_5) | NAICS_5!="missi")%>%
-  mutate(naics = as.numeric(NAICS_5))%>%
-  select(-NAICS_5) %>%
-  clean_tbbl()%>%
   full_join(mapping) %>%
-  select(-naics)%>%
   filter(is.na(age),
-         is.na(gender))%>%
+         is.na(sex))%>%
   group_by(syear, aggregate_industry) %>%
   summarize(average_wage = round(weighted.mean(hrlyearn_num_mean, w=hrlyearn_num_count, na.rm=TRUE), digits = 2)) %>%
   filter(!is.na(aggregate_industry),
@@ -156,8 +177,8 @@ industry_overview$redundant_small <- fill_redundant("small_current")
 industry_overview$redundant_unemployment <- fill_redundant("unemployment_current")
 industry_overview$redundant_men <- fill_redundant("men")
 industry_overview$redundant_women <- fill_redundant("women")
-industry_overview$redundant_male_wage <- fill_redundant("male_average_wage_current")
-industry_overview$redundant_female_wage <- fill_redundant("female_average_wage_current")
+industry_overview$redundant_male_wage <- fill_redundant("male_average_wage_current")#missing
+industry_overview$redundant_female_wage <- fill_redundant("female_average_wage_current")#missing
 industry_overview$redundant_youth_wage <- fill_redundant("youth_wages_current")
 industry_overview$redundant_cariboo <- fill_redundant("cariboo")
 industry_overview$redundant_kootenay <- fill_redundant("kootenay")
@@ -317,13 +338,12 @@ regional_by_region <- region%>%
 #goods vs services--------------------
 regional_goods_vs_services <- region_gvs%>%
   filter(is.na(NAICS_5) | NAICS_5!="missi")%>%
-  mutate(naics=as.numeric(NAICS_5))%>%
+ # mutate(naics=as.numeric(NAICS_5))%>%
   clean_tbbl()%>%
   mutate(region=case_when(is.na(region)~"british_columbia",
                          region=="north_coast"~"north_coast_and_nechako",
                          region=="nechako"~"north_coast_and_nechako",
                          TRUE~region))%>%
-  select(-naics_5)%>%
   full_join(gvs_mapping)%>%
   filter(syear==last_full_year)%>%
   group_by(region, goods_vs_services)%>%
@@ -344,10 +364,10 @@ wb <- loadWorkbook(here("output_template","LFS_Data_Sheet_template.xlsx"))
 # prcntg <- createCellStyle(wb)
 # setDataFormat(prcntg, format = "0.0%")
 
-write_workbook(industry_cleaned, "Industry Profiles", 5, 1, FALSE)
-write_workbook(regional_profile_1, "Regional Profiles", 6, 1, FALSE)
-write_workbook(regional_profile_2, "Regional Profiles", 21, 1, FALSE)
-write_workbook(regional_profile_3, "Regional Profiles", 35, 1, FALSE)
+write_workbook(industry_cleaned, "Industry Profiles", 5, 1)
+write_workbook(regional_profile_1, "Regional Profiles", 6, 1)
+write_workbook(regional_profile_2, "Regional Profiles", 21, 1)
+write_workbook(regional_profile_3, "Regional Profiles", 35, 1)
 
 # rc0 = expand.grid(row = 5:23, col = c(2,5:22, 29:35))
 # rc1 = expand.grid(row = 6:13, col = c(2:7, 9:22))
