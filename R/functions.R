@@ -1,7 +1,9 @@
 total_employment_year <- function(tbbl, year) {
+  years <- (year-1):year
   tbbl %>%
+    clean_names()|>
     filter(
-      syear %in% year,
+      syear %in% years,
       is.na(agegrp),
       is.na(sex)
     ) %>%
@@ -35,13 +37,11 @@ age_percentages <- function(ages, prefix) {
 load_clean_aggregate <- function(pat) {
   #need to get rid of "missi" before converting to numeric, otherwise missi converted to NA and f's up aggregate.
   #note that by default filter drops NA's, must explicitly state we want to keep the NAs (which in RTRA land are the aggregates.)
-  temp <- vroom(here("data", list.files(here("data"), pattern = pat)))%>%
+  vroom(here("data", list.files(here("data"), pattern = pat)))%>%
   filter(is.na(NAICS_5) | NAICS_5!="missi")%>%
-    mutate(naics = as.numeric(NAICS_5)) %>%
-    select(-NAICS_5) %>%
-    wrapR::clean_tbbl()%>%
-    full_join(mapping) %>%
-    select(-naics) %>%
+    clean_tbbl()%>%
+    full_join(mapping)%>%
+    select(-naics_5) %>%
     group_by(across(c(-count))) %>%
     summarize(count = sum(count) / 12) %>%
     filter(!is.na(aggregate_industry))
@@ -62,7 +62,7 @@ percentage <- function(tbbl, var, value, quoted_value){
 }
 
 # Function to quickly export data
-write_workbook <- function(data, sheetname, startrow, startcol, head) {
+write_workbook <- function(data, sheetname, startrow, startcol, head=FALSE) {
   writeWorksheet(
     wb,
     data,
@@ -76,6 +76,34 @@ write_workbook <- function(data, sheetname, startrow, startcol, head) {
 fill_redundant <- function(var){
   unlist(industry_overview[industry_overview$aggregate_industry=="total,_all_industries", var])
 }
+
+clean_tbbl <- function(tbbl) {
+  tbbl %>%
+    janitor::clean_names() %>%
+    mutate(across(where(is.character), make_clean_factor))
+}
+make_clean_factor <- function(strng) {
+  strng %>%
+    stringr::str_replace_all("\t", "") %>%
+    trimws() %>%
+    stringr::str_to_lower() %>%
+    stringr::str_replace_all(" ", "_") %>%
+    stringr::str_replace_all("-", "_") %>%
+    factor()
+}
+
+camel_to_title <- function(tbbl) {
+  tbbl %>%
+    rapply(as.character, classes = "factor", how = "replace") %>%
+    tibble() %>%
+    mutate(across(where(is.character), make_title))
+}
+
+make_title <- function(strng){
+  strng <- str_to_title(str_replace_all(strng,"_"," "))
+}
+
+
 
 
 
