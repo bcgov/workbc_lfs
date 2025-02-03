@@ -4,7 +4,7 @@
 /*************************************************************************************************/
 
 Data work.HrlyWages;
-Set RTRAdata.LFS201620 (keep= ID AGE HRLYEARN PROV LFSSTAT NAICS_5 SYEAR SEX);
+Set RTRAdata.LFS201620 (keep= ID AGE HRLYEARN PROV LFSSTAT NAICS_5 SYEAR GENDER);
 
 /*Province B.C.*/
 if PROV=59;
@@ -25,7 +25,7 @@ run;
 %RTRAMean(
                 InputDataset=work.HrlyWages,
                 OutputName=wages_youth1620,
-                ClassVarList=SYEAR NAICS_5 AGE SEX,
+                ClassVarList=SYEAR NAICS_5 AGE GENDER,
                 AnalysisVarList= HRLYEARN_NUM,
                 UserWeight=FINALWT);
 run;

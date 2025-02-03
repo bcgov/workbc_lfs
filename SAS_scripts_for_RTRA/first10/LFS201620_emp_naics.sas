@@ -3,7 +3,7 @@
 /*************************************************************************************************/
 
 Data work.EMP_NAICS;
-Set RTRAdata.LFS201620 (keep= ID LFSSTAT AGE PROV NAICS_5 SYEAR SEX);
+Set RTRAdata.LFS201620 (keep= ID LFSSTAT AGE PROV NAICS_5 SYEAR GENDER);
 
 /*Job Status employed in labour force*/
 If LFSSTAT IN (1,2);
@@ -29,6 +29,6 @@ run;
 %RTRAFreq(
 	InputDataset=work.EMP_NAICS,
 	OutputName=EMP_NAICS_1620,
-	ClassVarList=SYEAR NAICS_5 AGEGRP SEX,
+	ClassVarList=SYEAR NAICS_5 AGEGRP GENDER,
 	UserWeight=FINALWT);
 run;
