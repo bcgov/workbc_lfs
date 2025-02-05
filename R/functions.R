@@ -5,7 +5,7 @@ total_employment_year <- function(tbbl, year) {
     filter(
       syear %in% years,
       is.na(agegrp),
-      is.na(sex)
+      is.na(gender)
     ) %>%
     mutate(count = round(count)) %>%
     pivot_wider(
@@ -19,7 +19,7 @@ age_percentages <- function(ages, prefix) {
   temp <- agg_emp_naics %>%
     filter(
       syear %in% c((last_full_year - 5), last_full_year),
-      is.na(sex),
+      is.na(gender),
       agegrp %in% c(ages, NA)
     ) %>%
     group_by(syear, in_age_group = !is.na(agegrp), aggregate_industry) %>%

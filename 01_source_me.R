@@ -24,42 +24,33 @@ previous_year <- last_full_year - 1
 source(here("R","functions.R"))
 # load data--------------------------------
 all_mapping <- readxl::read_excel(here("mapping_files", "industry_mapping_2025.xlsx"))
-
 mapping <- all_mapping|>
   select(naics_5, aggregate_industry)
 gvs_mapping <- all_mapping|>
   select(naics_5, goods_vs_services)
 
-#DEAL WITH SEX/GENDER MISMATCH (sex pre 2020, gender post)
-
-hrlywages_1620 <- vroom(here("data", list.files(here("data"), pattern = "HrlyWages_1620")))
-old_column_names <- colnames(hrlywages_1620)
-hrlywages_2125 <- vroom(here("data", list.files(here("data"), pattern = "HrlyWages_2125")))
-colnames(hrlywages_2125) <- old_column_names
-hrlywages <- bind_rows(hrlywages_1620, hrlywages_2125)%>%
+hrlywages <- vroom(here("data", list.files(here("data"), pattern = "HrlyWages")))|>
   clean_names()|>
-  mutate(sex = factor(sex, levels = c(1, 2), labels = c("male", "female")))
+  mutate(gender = factor(gender, levels = c(1, 2), labels = c("male", "female")))
 
-youthwages_1620 <- vroom(here("data", list.files(here("data"), pattern = "wages_youth1620")))
-old_column_names <- colnames(youthwages_1620)
-youthwages_2125 <- vroom(here("data", list.files(here("data"), pattern = "wages_youth2125")))
-colnames(youthwages_2125) <- old_column_names
-youthwages <- bind_rows(youthwages_1620, youthwages_2125)%>%
+youthwages <- vroom(here("data", list.files(here("data"), pattern = "wages_youth")))|>
   clean_names()|>
-  mutate(sex = factor(sex, levels = c(1, 2), labels = c("male", "female")))
+  mutate(gender = factor(gender, levels = c(1, 2), labels = c("male", "female")))
 
-emp_naics_1620 <- vroom(here("data", list.files(here("data"), pattern = "EMP_NAICS_1620")))
-old_column_names <- colnames(emp_naics_1620)
-emp_naics_2125 <- vroom(here("data", list.files(here("data"), pattern = "EMP_NAICS_2125")))
-colnames(emp_naics_2125) <- old_column_names
+emp_naics <- vroom(here("data", list.files(here("data"), pattern = "EMP_NAICS")))|>
+  clean_names()
 
-agg_emp_naics <- bind_rows(emp_naics_1620, emp_naics_2125)|>
-  clean_names()|>
+#test the mapping file--------------------------------------
+
+stopifnot(nrow(anti_join(emp_naics, mapping))==0) #nothing in emp_naics that is not in mapping
+stopifnot(nrow(anti_join(mapping, emp_naics))==0) #nothing in mapping that is not in emp_naics
+
+agg_emp_naics <- emp_naics|>
   left_join(mapping, by=c("naics_5"="naics_5"))%>%
   select(-naics_5) %>%
-  group_by(syear, agegrp, sex, aggregate_industry)%>%
+  group_by(syear, agegrp, gender, aggregate_industry)%>%
   summarize(count = sum(count) / 12)%>%
-  mutate(sex = factor(sex, levels = c(1, 2), labels = c("male", "female")))
+  mutate(gender = factor(gender, levels = c(1, 2), labels = c("male", "female")))
 
 ftpt <- load_clean_aggregate(pat = "empftpt_naics")
 cow <- load_clean_aggregate(pat = "COW")
@@ -90,9 +81,9 @@ industry_overview<- agg_emp_naics %>%
   filter(
     syear == last_full_year,
     is.na(agegrp),
-    !is.na(sex)
+    !is.na(gender)
   ) %>%
-  pivot_wider(names_from = sex, values_from = count) %>%
+  pivot_wider(names_from = gender, values_from = count) %>%
   mutate(
     men = round(100* male / (male + female), digits=1),
     women = round(100* female / (male + female), digits=1)
@@ -121,13 +112,13 @@ full_join(industry_unemployment)
 
 industry_wages <- hrlywages%>%
   full_join(mapping)%>%
-  group_by(syear, sex, aggregate_industry) %>%
+  group_by(syear, gender, aggregate_industry) %>%
   summarize(average_wage = round(weighted.mean(hrlyearn_num_mean, w=hrlyearn_num_count, na.rm=TRUE), digits=2)) %>%
   filter(!is.na(aggregate_industry),
          syear %in% c(last_full_year, (last_full_year-5)),
-         !is.na(sex)
+         !is.na(gender)
          )%>%
-  pivot_wider(names_from = sex, values_from = average_wage)%>%
+  pivot_wider(names_from = gender, values_from = average_wage)%>%
   pivot_wider(names_from = syear, values_from = c("female","male"), names_prefix = "average_wage_")%>%
   select(aggregate_industry, starts_with("male"), everything())
 
@@ -140,7 +131,7 @@ industry_overview <- industry_wages%>%
 industry_youth_wages <- youthwages%>%
   full_join(mapping) %>%
   filter(is.na(age),
-         is.na(sex))%>%
+         is.na(gender))%>%
   group_by(syear, aggregate_industry) %>%
   summarize(average_wage = round(weighted.mean(hrlyearn_num_mean, w=hrlyearn_num_count, na.rm=TRUE), digits = 2)) %>%
   filter(!is.na(aggregate_industry),
@@ -212,7 +203,7 @@ regional_population <- cansim::get_cansim("17-10-0137-01")%>%
   janitor::clean_names()%>%
   filter(grepl('British Columbia', geo),
          ref_date==max(ref_date),
-         sex=="Both sexes")%>%
+         sex=="Both sexes")%>% #not updated to gender yet?
   select(region=geo, age, value)%>%
   mutate(region=word(region, 1, sep = ","),
          region=case_when(region=="North Coast"~"North Coast and Nechako",
