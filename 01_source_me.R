@@ -23,7 +23,7 @@ previous_year <- last_full_year - 1
 # functions---------------
 source(here("R","functions.R"))
 # load data--------------------------------
-all_mapping <- readxl::read_excel(here("mapping_files", "industry_mapping_2025.xlsx"))
+all_mapping <- readxl::read_excel(here("mapping_files", "industry_mapping_2025_with_stokes_agg.xlsx"))
 mapping <- all_mapping|>
   select(naics_5, aggregate_industry)
 gvs_mapping <- all_mapping|>
@@ -43,7 +43,7 @@ emp_naics <- vroom(here("data", list.files(here("data"), pattern = "EMP_NAICS"))
 #test the mapping file--------------------------------------
 
 stopifnot(nrow(anti_join(emp_naics, mapping))==0) #nothing in emp_naics that is not in mapping
-stopifnot(nrow(anti_join(mapping, emp_naics))==0) #nothing in mapping that is not in emp_naics
+stopifnot(nrow(anti_join(mapping, emp_naics))==1) #naics 05511 is in mapping, not in data
 
 agg_emp_naics <- emp_naics|>
   left_join(mapping, by=c("naics_5"="naics_5"))%>%
@@ -340,8 +340,8 @@ regional_goods_vs_services <- region_gvs%>%
   group_by(region, goods_vs_services)%>%
   summarise(count=sum(count)/12)%>%
   pivot_wider(names_from = goods_vs_services, values_from = count)%>%
-  mutate(percent_goods=round(100*goods/`NA`, digits=1),
-         percent_services=round(100*services/`NA`, digits=1))%>%
+  mutate(percent_goods=round(100*goods/`Total, All Industries`, digits=1),
+         percent_services=round(100*services/`Total, All Industries`, digits=1))%>%
   select(region, percent_goods, percent_services)
 
 regional_profile_3 <- full_join(regional_by_region, regional_goods_vs_services)%>%
