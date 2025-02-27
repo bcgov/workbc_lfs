@@ -281,7 +281,7 @@ regional_profile_1 <- full_join(regional_population, regional_full_time)%>%
 # size of industry within a region---------------
 regional_employment_by_industry <- region%>%
   filter(syear==last_full_year,
-         aggregate_industry!="total,_all_industries")%>%
+         str_detect(aggregate_industry, "(?i)Total", negate=TRUE))%>% #does NOT contain Total or total
   mutate(region=case_when(is.na(region)~"british_columbia",
                           region=="north_coast"~"north_coast_and_nechako",
                           region=="nechako"~"north_coast_and_nechako",
@@ -315,8 +315,7 @@ colnames(regional_profile_2) <- str_to_title(str_replace_all(colnames(regional_p
 regional_by_region <- region%>%
   filter(syear==last_full_year,
          !is.na(region),
-         aggregate_industry!="total,_all_industries"
-         )%>%
+         str_detect(aggregate_industry, "(?i)Total", negate=TRUE))%>% #does NOT contain Total or total
   mutate(region=case_when(region=="north_coast"~"north_coast_and_nechako",
                                    region=="nechako"~"north_coast_and_nechako",
                                    TRUE~region))%>%
