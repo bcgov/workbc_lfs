@@ -34,11 +34,11 @@ age_percentages <- function(ages, prefix) {
     temp
 }
 
-load_clean_aggregate <- function(pat) {
+load_clean_aggregate <- function(paths) {
   #need to get rid of "missi" before converting to numeric, otherwise missi converted to NA and f's up aggregate.
   #note that by default filter drops NA's, must explicitly state we want to keep the NAs (which in RTRA land are the aggregates.)
-  vroom(here("data", list.files(here("data"), pattern = pat)))%>%
-  filter(is.na(NAICS_5) | NAICS_5!="missi")%>%
+  vroom(paths)%>%
+    filter(is.na(NAICS_5) | NAICS_5!="missi")%>%
     clean_tbbl()%>%
     full_join(mapping)%>%
     select(-naics_5) %>%

@@ -14,36 +14,56 @@ library(tidyverse)
 library(vroom)
 library(here)
 library(XLConnect)
-library(conflicted)
 library(janitor)
+library(readxl)
+library(digest)
+library(fs)
+library(yaml)
+library(tools)
+library(conflicted)
 conflicts_prefer(dplyr::filter)
 # constants---------------
-last_full_year <- 2024
+last_full_year <- 2025
 previous_year <- last_full_year - 1
 # functions---------------
 source(here("R","functions.R"))
+source(here("..","shared_functions", "functions.R"))
+
+# ingest new files into data pond
+
+ingest_pond()
+
 # load data--------------------------------
-all_mapping <- readxl::read_excel(here("mapping_files", "industry_mapping_2025_with_stokes_agg.xlsx"))
+all_mapping <- readxl::read_excel(resolve_current("industry_mapping_with_stokes_agg.xlsx"))
 mapping <- all_mapping|>
   select(naics_5, aggregate_industry)
 gvs_mapping <- all_mapping|>
   select(naics_5, goods_vs_services)
 
-hrlywages <- vroom(here("data", list.files(here("data"), pattern = "HrlyWages")))|>
+hrlywages <- vroom(c(resolve_current("HrlyWages_1620.csv"),
+                     resolve_current("HrlyWages_2125.csv")
+                     )
+                   )|>
   clean_names()|>
   mutate(gender = factor(gender, levels = c(1, 2), labels = c("male", "female")))
 
-youthwages <- vroom(here("data", list.files(here("data"), pattern = "wages_youth")))|>
+youthwages <- vroom(c(resolve_current("wage_youth_1620.csv"),
+                      resolve_current("wage_youth_2125.csv")
+                      )
+                    )|>
   clean_names()|>
   mutate(gender = factor(gender, levels = c(1, 2), labels = c("male", "female")))
 
-emp_naics <- vroom(here("data", list.files(here("data"), pattern = "EMP_NAICS")))|>
+emp_naics <- vroom(c(resolve_current("EMP_NAICS_1620.csv"),
+                     resolve_current("EMP_NAICS_2125.csv")
+                     )
+                   )|>
   clean_names()
 
 #test the mapping file--------------------------------------
 
 stopifnot(nrow(anti_join(emp_naics, mapping))==0) #nothing in emp_naics that is not in mapping
-stopifnot(nrow(anti_join(mapping, emp_naics))==1) #naics 05511 is in mapping, not in data
+stopifnot(nrow(anti_join(mapping, emp_naics))==0) #nothing in mapping that is not in emp_naics
 
 agg_emp_naics <- emp_naics|>
   left_join(mapping, by=c("naics_5"="naics_5"))%>%
@@ -52,16 +72,19 @@ agg_emp_naics <- emp_naics|>
   summarize(count = sum(count) / 12)%>%
   mutate(gender = factor(gender, levels = c(1, 2), labels = c("male", "female")))
 
-ftpt <- load_clean_aggregate(pat = "empftpt_naics")
-cow <- load_clean_aggregate(pat = "COW")
-permtemp <- load_clean_aggregate(pat = "permtemp")
-size <- load_clean_aggregate(pat = "size")
-status <- load_clean_aggregate(pat = "lfsstat")
-region <- load_clean_aggregate(pat = "EMP_REGION")
+ftpt <- load_clean_aggregate(c(resolve_current("empftpt_naics_1620.csv"), resolve_current("empftpt_naics_2125.csv")))
+cow <- load_clean_aggregate(c(resolve_current("EMPCOW_NAICS_1620.csv"), resolve_current("EMPCOW_NAICS_2125.csv")))
+permtemp <- load_clean_aggregate(c(resolve_current("emp_permtemp_1620.csv"), resolve_current("emp_permtemp_2125.csv")))
+size <- load_clean_aggregate(c(resolve_current("empsize_naics_1620.csv"), resolve_current("empsize_naics_2125.csv")))
+status <- load_clean_aggregate(c(resolve_current("lfsstat_1620.csv"), resolve_current("lfsstat_2125.csv")))
+region <- load_clean_aggregate(c(resolve_current("EMP_REGION_1620.csv"), resolve_current("EMP_REGION_2125.csv")))
 
-reg_stat <- vroom(here("data", list.files(here("data"), pattern = "EMP_REG_STAT")))
-reg_ft <- vroom(here("data", list.files(here("data"), pattern = "ftpt_region")))
-region_gvs <- vroom(here("data", list.files(here("data"), pattern = "EMP_REGION")))
+reg_stat <- vroom(c(resolve_current("EMP_REG_STAT_1115.csv"),
+                    resolve_current("EMP_REG_STAT_1620.csv"),
+                    resolve_current("EMP_REG_STAT_2125.csv")))
+
+reg_ft <- vroom(c(resolve_current("ftpt_region_1620.csv"),resolve_current("ftpt_region_2125.csv")))
+region_gvs <- vroom(c(resolve_current("EMP_REGION_1620.csv"),resolve_current("EMP_REGION_2125.csv")))
 
 #industry profiles---------------------
 industry_overview <- total_employment_year(agg_emp_naics, last_full_year)%>%
