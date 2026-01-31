@@ -1,0 +1,19 @@
+file: RTRA1793151_EMP_REG_STAT_1115.csv
+sha256: 89e044c9515f593e07fd0fe48b3bdad29469e36f08cc468f9daca13ad087244d
+size_bytes: 2373048.0
+n_rows: 67176
+n_cols: 5
+col_names:
+- SYEAR
+- LF_STAT
+- REGION
+- NAICS_5
+- _COUNT_
+col_types:
+- numeric
+- character
+- character
+- character
+- numeric
+created: 2026-01-28 11:58:20.055615
+semantic_name: EMP_REG_STAT_1115.csv

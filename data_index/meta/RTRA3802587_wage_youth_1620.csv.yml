@@ -1,0 +1,21 @@
+file: RTRA3802587_wage_youth_1620.csv
+sha256: 9da976d04b03927d72b0f754c351d6be38ee555b8267a8d6832681a0c55c168b
+size_bytes: 1195832.0
+n_rows: 55836
+n_cols: 6
+col_names:
+- SYEAR
+- NAICS_5
+- AGE
+- GENDER
+- HRLYEARN_NUM_MEAN
+- HRLYEARN_NUM_COUNT
+col_types:
+- numeric
+- character
+- character
+- numeric
+- numeric
+- numeric
+created: 2026-01-28 11:58:20.326781
+semantic_name: wage_youth_1620.csv

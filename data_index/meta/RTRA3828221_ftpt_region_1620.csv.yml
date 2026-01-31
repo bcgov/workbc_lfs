@@ -1,0 +1,19 @@
+file: RTRA3828221_ftpt_region_1620.csv
+sha256: ded02ea5435cee6ebebe11e97b126115cbe5774defbd73bda78ab92779acde8d
+size_bytes: 1785797.0
+n_rows: 50544
+n_cols: 5
+col_names:
+- SYEAR
+- NAICS_5
+- REGION
+- FTPT_MAIN
+- _COUNT_
+col_types:
+- numeric
+- character
+- character
+- character
+- numeric
+created: 2026-01-28 11:58:20.351808
+semantic_name: ftpt_region_1620.csv

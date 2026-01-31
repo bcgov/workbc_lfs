@@ -1,0 +1,19 @@
+file: RTRA7356383_EMP_NAICS_2125.csv
+sha256: 886c1d8f4c6f925e2bb6c140973d4fb25d5006e55c1c36833d1212e36144a872
+size_bytes: 1177065.0
+n_rows: 39312
+n_cols: 5
+col_names:
+- SYEAR
+- NAICS_5
+- AGEGRP
+- GENDER
+- _COUNT_
+col_types:
+- numeric
+- character
+- character
+- numeric
+- numeric
+created: 2026-01-28 11:58:20.574329
+semantic_name: EMP_NAICS_2125.csv

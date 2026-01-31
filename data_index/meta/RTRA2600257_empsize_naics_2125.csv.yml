@@ -1,0 +1,17 @@
+file: RTRA2600257_empsize_naics_2125.csv
+sha256: cb479482a9a9d49ec9c88a3fc0fe2da307099eceb23400366513ca895c83bbe2
+size_bytes: 313727.0
+n_rows: 9300
+n_cols: 4
+col_names:
+- SYEAR
+- NAICS_5
+- SIZE
+- _COUNT_
+col_types:
+- numeric
+- character
+- character
+- numeric
+created: 2026-01-28 11:58:20.104544
+semantic_name: empsize_naics_2125.csv

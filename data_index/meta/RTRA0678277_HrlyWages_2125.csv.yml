@@ -1,0 +1,19 @@
+file: RTRA0678277_HrlyWages_2125.csv
+sha256: 761402e6847faedc98589b59523c2e735579862941e3d3ae90670c60185ef028
+size_bytes: 119747.0
+n_rows: 5616
+n_cols: 5
+col_names:
+- SYEAR
+- NAICS_5
+- GENDER
+- HRLYEARN_NUM_MEAN
+- HRLYEARN_NUM_COUNT
+col_types:
+- numeric
+- character
+- numeric
+- numeric
+- numeric
+created: 2026-01-28 11:58:20.025648
+semantic_name: HrlyWages_2125.csv

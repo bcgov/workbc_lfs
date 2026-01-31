@@ -1,0 +1,17 @@
+file: RTRA9025697_EMPCOW_NAICS_1620.csv
+sha256: 6594df1bc9fe5b94f737ec2334e2b11a24847ee60442bb4c6e8f9110558836cf
+size_bytes: 207849.0
+n_rows: 7488
+n_cols: 4
+col_names:
+- SYEAR
+- NAICS_5
+- CLASS
+- _COUNT_
+col_types:
+- numeric
+- character
+- character
+- numeric
+created: 2026-01-28 11:58:20.640623
+semantic_name: EMPCOW_NAICS_1620.csv

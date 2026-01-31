@@ -1,0 +1,17 @@
+file: RTRA3647931_lfsstat_2125.csv
+sha256: a20b6934dfa6492a28f915b9728f54a4d445041a31ab4ed93d63e904d99e2b76
+size_bytes: 178353.0
+n_rows: 7512
+n_cols: 4
+col_names:
+- SYEAR
+- LF_STAT
+- NAICS_5
+- _COUNT_
+col_types:
+- numeric
+- character
+- character
+- numeric
+created: 2026-01-28 11:58:20.133902
+semantic_name: lfsstat_2125.csv

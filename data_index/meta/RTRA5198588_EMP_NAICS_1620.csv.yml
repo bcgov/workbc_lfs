@@ -1,0 +1,19 @@
+file: RTRA5198588_EMP_NAICS_1620.csv
+sha256: 5c64a27a7d1285ad377762b58069940aca646e408e386decf3691214bc56df40
+size_bytes: 1175153.0
+n_rows: 39312
+n_cols: 5
+col_names:
+- SYEAR
+- NAICS_5
+- AGEGRP
+- GENDER
+- _COUNT_
+col_types:
+- numeric
+- character
+- character
+- numeric
+- numeric
+created: 2026-01-28 11:58:20.48926
+semantic_name: EMP_NAICS_1620.csv

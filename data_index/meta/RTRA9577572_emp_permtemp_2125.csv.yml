@@ -1,0 +1,17 @@
+file: RTRA9577572_emp_permtemp_2125.csv
+sha256: e31da799e87cda9d26daecb22f2fabd342175575acd3be5380f43906b3726f57
+size_bytes: 177233.0
+n_rows: 7488
+n_cols: 4
+col_names:
+- SYEAR
+- NAICS_5
+- TEMP
+- _COUNT_
+col_types:
+- numeric
+- character
+- character
+- numeric
+created: 2026-01-28 11:58:20.648062
+semantic_name: emp_permtemp_2125.csv

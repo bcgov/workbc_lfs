@@ -1,0 +1,17 @@
+file: RTRA5680766_EMP_REGION_2125.csv
+sha256: fb4733d30d13b536fa86b55263ba6fc58264d8009b47ea4d1df1d9034403115d
+size_bytes: 483238.0
+n_rows: 16848
+n_cols: 4
+col_names:
+- SYEAR
+- REGION
+- NAICS_5
+- _COUNT_
+col_types:
+- numeric
+- character
+- character
+- numeric
+created: 2026-01-28 11:58:20.500997
+semantic_name: EMP_REGION_2125.csv
