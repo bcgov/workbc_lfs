@@ -1,5 +1,6 @@
 semantic_name: EMP_REG_STAT_1620.csv
-current_file: RTRA6973351_EMP_REG_STAT_1620.csv
-sha256: 167686160cb6cff7bb9a0af0128ea1eb114333b428629d502486ca87e987d215
+preferred: raw
+raw: RTRA6973351_EMP_REG_STAT_1620.csv
+parquet: ~
 meta_file: RTRA6973351_EMP_REG_STAT_1620.csv.yml
-updated: 2026-01-28 11:58:20.555595
+updated: 2026-01-31 19:09:17

@@ -1,5 +1,6 @@
 semantic_name: EMP_REGION_2125.csv
-current_file: RTRA5680766_EMP_REGION_2125.csv
-sha256: fb4733d30d13b536fa86b55263ba6fc58264d8009b47ea4d1df1d9034403115d
+preferred: raw
+raw: RTRA5680766_EMP_REGION_2125.csv
+parquet: ~
 meta_file: RTRA5680766_EMP_REGION_2125.csv.yml
-updated: 2026-01-28 11:58:20.501328
+updated: 2026-01-31 19:09:17

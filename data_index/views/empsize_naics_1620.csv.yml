@@ -1,5 +1,6 @@
 semantic_name: empsize_naics_1620.csv
-current_file: RTRA2049491_empsize_naics_1620.csv
-sha256: 2226795be71630f21e5cb07d22001145c5d5a040aab1d52cf9cf1828b39a5e80
+preferred: raw
+raw: RTRA2049491_empsize_naics_1620.csv
+parquet: ~
 meta_file: RTRA2049491_empsize_naics_1620.csv.yml
-updated: 2026-01-28 11:58:20.063906
+updated: 2026-01-31 19:09:17

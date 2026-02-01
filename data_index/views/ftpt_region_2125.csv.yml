@@ -1,5 +1,6 @@
 semantic_name: ftpt_region_2125.csv
-current_file: RTRA7761972_ftpt_region_2125.csv
-sha256: cfbd0293083a5f985faf3c7801c68e1750751c10ec008c3dc67fe7848eb15a07
+preferred: raw
+raw: RTRA7761972_ftpt_region_2125.csv
+parquet: ~
 meta_file: RTRA7761972_ftpt_region_2125.csv.yml
-updated: 2026-01-28 11:58:20.622932
+updated: 2026-01-31 19:09:17
