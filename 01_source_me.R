@@ -17,6 +17,7 @@ library(digest)
 library(fs)
 library(yaml)
 library(tools)
+library(bcgovpond)
 library(conflicted)
 conflicts_prefer(dplyr::filter)
 # constants---------------
@@ -24,7 +25,6 @@ last_full_year <- 2025
 previous_year <- last_full_year - 1
 # functions---------------
 source(here("R","functions.R"))
-source(here("..","shared_functions", "pond_utilities.R"))
 
 # ingest new files into data pond
 

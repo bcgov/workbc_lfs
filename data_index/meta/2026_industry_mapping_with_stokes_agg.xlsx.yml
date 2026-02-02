@@ -1,7 +1,7 @@
 file: 2026_industry_mapping_with_stokes_agg.xlsx
 sha256: 07820f42d423b48e6aeb066fb6de3769c55d61c7c95d20b2d937d51f99eb2028
 size_bytes: 18252.0
-n_rows: 314
+n_rows: .na.integer
 n_cols: 6
 col_names:
 - naics_5
@@ -17,5 +17,6 @@ col_types:
 - character
 - character
 - character
-created: 2026-01-28 11:58:19.988971
+created: 2026-02-02 11:09:38.189946
 semantic_name: industry_mapping_with_stokes_agg.xlsx
+provenance: ~
